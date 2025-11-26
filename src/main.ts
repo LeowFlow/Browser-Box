@@ -1,27 +1,38 @@
 import * as THREE from 'three';
 import { createRenderer, renderFrame } from './engine/renderer';
 import { createPhysics } from './engine/physics';
+import {
+  createBox,
+  createGround,
+  syncMeshFromRigidBody,
+  type PhysicsObject,
+} from './engine/objects';
 
 async function main() {
   const renderCtx = createRenderer();
   const physicsCtx = await createPhysics();
 
   const { scene, camera } = renderCtx;
-  const { world } = physicsCtx;
+  const { world, RAPIER } = physicsCtx;
 
-  camera.position.set(4, 3, 6);
-  camera.lookAt(0, 0, 0);
+  camera.position.set(6, 6, 10);
+  camera.lookAt(0, 1, 0);
 
-  const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-  const cubeMaterial = new THREE.MeshStandardMaterial({ color: '#38bdf8' });
-  const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-  scene.add(cube);
+  const objects: PhysicsObject[] = [];
+
+  const ground = createGround(RAPIER, world, scene);
+  objects.push(ground);
+
+  const boxCount = 8;
+  for (let i = 0; i < boxCount; i += 1) {
+    const position = new THREE.Vector3(0, 1 + i * 1.25, 0);
+    const box = createBox(RAPIER, world, scene, position);
+    objects.push(box);
+  }
 
   function animate() {
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
-
     world.step();
+    objects.forEach(syncMeshFromRigidBody);
     renderFrame(renderCtx);
     requestAnimationFrame(animate);
   }
