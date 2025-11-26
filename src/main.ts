@@ -1,23 +1,32 @@
 import * as THREE from 'three';
 import { createRenderer, renderFrame } from './engine/renderer';
+import { createPhysics } from './engine/physics';
 
-const context = createRenderer();
-const { scene, camera } = context;
+async function main() {
+  const renderCtx = createRenderer();
+  const physicsCtx = await createPhysics();
 
-camera.position.set(4, 3, 6);
-camera.lookAt(0, 0, 0);
+  const { scene, camera } = renderCtx;
+  const { world } = physicsCtx;
 
-const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-const cubeMaterial = new THREE.MeshStandardMaterial({ color: '#38bdf8' });
-const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-scene.add(cube);
+  camera.position.set(4, 3, 6);
+  camera.lookAt(0, 0, 0);
 
-function animate() {
-  cube.rotation.x += 0.01;
-  cube.rotation.y += 0.01;
+  const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const cubeMaterial = new THREE.MeshStandardMaterial({ color: '#38bdf8' });
+  const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+  scene.add(cube);
 
-  renderFrame(context);
-  requestAnimationFrame(animate);
+  function animate() {
+    cube.rotation.x += 0.01;
+    cube.rotation.y += 0.01;
+
+    world.step();
+    renderFrame(renderCtx);
+    requestAnimationFrame(animate);
+  }
+
+  animate();
 }
 
-animate();
+main();
